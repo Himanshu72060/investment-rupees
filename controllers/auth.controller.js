@@ -1,15 +1,18 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const { generateToken } = require("../config/jwt");
+const jwt = require("jsonwebtoken");
 
+/* =========================
+   USER SIGNUP
+========================= */
 exports.signup = async (req, res) => {
     try {
-        const { name, email, password, phone, sponsorCode } = req.body;
+        const { name, email, phone, password, sponsorCode } = req.body;
 
-        if (!name || !email || !password || !phone) {
+        if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "All fields are required"
+                message: "Name, email and password are required"
             });
         }
 
@@ -21,23 +24,28 @@ exports.signup = async (req, res) => {
             });
         }
 
+        // 🔐 Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             name,
             email,
-            password: hashedPassword,
             phone,
+            password: hashedPassword,
             sponsorCode
         });
 
-        // ✅ TOKEN GENERATE HERE
-        const token = generateToken(user);
+        // 🔑 Generate JWT
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
 
         res.status(201).json({
             success: true,
             message: "Signup successful",
-            token, // 🔥 FRONTEND USE THIS
+            token,
             user: {
                 id: user._id,
                 name: user.name,
@@ -46,6 +54,7 @@ exports.signup = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error("Signup Error:", error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -53,73 +62,61 @@ exports.signup = async (req, res) => {
     }
 };
 
-
-// .
-/**
- * =========================
- * USER LOGIN
- * =========================
- * POST /api/auth/login
- */
+/* =========================
+   USER LOGIN
+========================= */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 1️⃣ Validation
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Email and password are required"
+                message: "Email and password required"
             });
         }
 
-        // 2️⃣ Find user
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({
+            return res.status(404).json({
                 success: false,
-                message: "Invalid email or password"
+                message: "User not found"
             });
         }
 
-        // 3️⃣ Compare password (DB me hashed hona chahiye)
+        // 🔐 Compare password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid email or password"
+                message: "Invalid credentials"
             });
         }
 
-        // 4️⃣ Generate JWT token
+        // 🔑 Generate JWT
         const token = jwt.sign(
-            {
-                id: user._id,
-                role: user.role
-            },
+            { id: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
-        // 5️⃣ Send response
-        res.status(200).json({
+        res.json({
             success: true,
             message: "Login successful",
-            token, // 🔥 frontend yahin se token lega
+            token,
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                wallet: user.wallet,
-                role: user.role
+                wallet: user.wallet
             }
         });
     } catch (error) {
-        console.error("LOGIN ERROR:", error);
+        console.error("Login Error:", error);
         res.status(500).json({
             success: false,
-            message: "Internal server error"
+            message: error.message
         });
     }
 };
