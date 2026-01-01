@@ -121,25 +121,17 @@ exports.login = async (req, res) => {
     }
 };
 
-//  user get profile
-exports.getProfile = async (req, res) => {
+//  get all users (admin only)
+exports.getAllUsers = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const user = await User.findById(userId).select("-password");
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
+        const users = await User.find().select("-password");
         res.json({
             success: true,
-            user
+            users
         });
     } catch (error) {
-        console.error("Get Profile Error:", error);
-        res.status(500).json({  
+        console.error("Get All Users Error:", error);
+        res.status(500).json({
             success: false,
             message: error.message
         });
