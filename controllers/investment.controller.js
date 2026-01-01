@@ -2,12 +2,7 @@ const Investment = require("../models/Investment");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 
-await Transaction.create({
-    user: userId,
-    type: "investment",
-    amount,
-    note: "Investment created"
-});
+
 
 
 /*
@@ -53,6 +48,13 @@ exports.createInvestment = async (req, res) => {
             dailyPercent: plan.percent,
             totalDays: plan.days,
             startDate: new Date()
+        });
+
+        await Transaction.create({
+            user: userId,
+            type: "investment",
+            amount,
+            note: "Investment created"
         });
 
         res.status(201).json({

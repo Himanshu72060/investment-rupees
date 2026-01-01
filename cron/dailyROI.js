@@ -1,42 +1,45 @@
 const Investment = require("../models/Investment");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
-await Transaction.create({
-    user: inv.user,
-    type: "roi",
-    amount: dailyProfit,
-    note: "Daily ROI credited"
-});
 
+const dailyROI = async () => {
+    try {
+        const investments = await Investment.find({ status: "active" });
 
+        for (let inv of investments) {
+            // plan complete?
+            if (inv.daysCompleted >= inv.totalDays) {
+                inv.status = "completed";
+                await inv.save();
+                continue;
+            }
 
-module.exports = async () => {
-    const investments = await Investment.find({ isActive: true });
+            // daily profit
+            const dailyProfit = (inv.amount * inv.dailyPercent) / 100;
 
+            // 🔹 credit wallet
+            const user = await User.findById(inv.user);
+            user.wallet += dailyProfit;
+            await user.save();
 
-    for (let inv of investments) {
-        if (inv.daysCompleted >= inv.totalDays) {
-            inv.isActive = false;
+            // 🔹 update investment
+            inv.daysCompleted += 1;
+            inv.totalEarned += dailyProfit;
             await inv.save();
-            continue;
+
+            // 🔥 YAHI LAGANA HAI (TRANSACTION LOG)
+            await Transaction.create({
+                user: inv.user,
+                type: "roi",
+                amount: dailyProfit,
+                note: "Daily ROI credited"
+            });
         }
 
-
-        const roi = (inv.amount * inv.dailyPercent) / 100;
-        const gst = roi * 0.18;
-        const net = roi - gst;
-
-
-        const user = await User.findById(inv.userId);
-        user.walletBalance += net;
-        user.totalEarnings += net;
-        await user.save();
-
-
-        inv.daysCompleted += 1;
-        await inv.save();
-
-
-        await Transaction.create({ userId: user._id, type: "roi", amount: net, gst });
+        console.log("✅ Daily ROI completed");
+    } catch (error) {
+        console.error("❌ Daily ROI Error:", error);
     }
 };
+
+module.exports = dailyROI;

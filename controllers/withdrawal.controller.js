@@ -1,13 +1,6 @@
 const Withdrawal = require("../models/Withdrawal");
 const User = require("../models/User");
 
-await Transaction.create({
-    user: userId,
-    type: "withdraw",
-    amount,
-    note: "Withdraw requested"
-});
-
 
 /* =========================
    CREATE WITHDRAW REQUEST
@@ -49,6 +42,14 @@ exports.createWithdrawal = async (req, res) => {
             amount,
             status: "pending"
         });
+
+        await Transaction.create({
+            user: userId,
+            type: "withdraw",
+            amount,
+            note: "Withdraw requested"
+        });
+
 
         res.status(201).json({
             success: true,
