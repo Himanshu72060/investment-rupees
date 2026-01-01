@@ -1,5 +1,14 @@
-const router = require("express").Router();
-const auth = require("../middleware/auth.middleware");
-const c = require("../controllers/withdrawal.controller");
-router.post("/", auth, c.withdraw);
+const express = require("express");
+const router = express.Router();
+
+const {
+    createWithdrawal,
+    getMyWithdrawals
+} = require("../controllers/withdrawal.controller");
+
+const authMiddleware = require("../middleware/auth.middleware");
+
+router.post("/request", authMiddleware, createWithdrawal);
+router.get("/my", authMiddleware, getMyWithdrawals);
+
 module.exports = router;
