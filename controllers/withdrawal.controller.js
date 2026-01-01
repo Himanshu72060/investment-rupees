@@ -1,6 +1,14 @@
 const Withdrawal = require("../models/Withdrawal");
 const User = require("../models/User");
 
+await Transaction.create({
+    user: userId,
+    type: "withdraw",
+    amount,
+    note: "Withdraw requested"
+});
+
+
 /* =========================
    CREATE WITHDRAW REQUEST
 ========================= */

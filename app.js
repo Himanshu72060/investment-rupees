@@ -18,6 +18,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/invest", investmentRoutes);
 app.use("/api/withdraw", withdrawalRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/transaction", require("./routes/transaction.routes"));
+
 
 
 app.get("/", (req, res) => res.send("API Running"));

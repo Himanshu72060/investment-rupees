@@ -1,6 +1,13 @@
 const Investment = require("../models/Investment");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
+await Transaction.create({
+    user: inv.user,
+    type: "roi",
+    amount: dailyProfit,
+    note: "Daily ROI credited"
+});
+
 
 
 module.exports = async () => {
