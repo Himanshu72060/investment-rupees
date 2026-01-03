@@ -111,48 +111,48 @@ exports.createDeposit = async (req, res) => {
 };
 
 // ✅ CREATE INVESTMENT
-exports.createInvestment = async (req, res) => {
-    try {
-        const { amount } = req.body;
-        const userId = req.user.id;
+// exports.createInvestment = async (req, res) => {
+//     try {
+//         const { amount } = req.body;
+//         const userId = req.user.id;
 
-        if (amount < 300) {
-            return res.status(400).json({
-                success: false,
-                message: "Minimum investment is ₹300"
-            });
-        }
+//         if (amount < 300) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Minimum investment is ₹300"
+//             });
+//         }
 
-        const plan = getPlanDetails(amount);
-        if (!plan) {
-            return res.status(400).json({ success: false, message: "Invalid plan" });
-        }
+//         const plan = getPlanDetails(amount);
+//         if (!plan) {
+//             return res.status(400).json({ success: false, message: "Invalid plan" });
+//         }
 
-        const investment = await Investment.create({
-            user: userId,
-            amount,
-            dailyPercent: plan.percent,
-            totalDays: plan.days,
-            startDate: new Date()
-        });
+//         const investment = await Investment.create({
+//             user: userId,
+//             amount,
+//             dailyPercent: plan.percent,
+//             totalDays: plan.days,
+//             startDate: new Date()
+//         });
 
-        await Transaction.create({
-            user: userId,
-            type: "investment",
-            amount,
-            note: "Investment created"
-        });
+//         await Transaction.create({
+//             user: userId,
+//             type: "investment",
+//             amount,
+//             note: "Investment created"
+//         });
 
-        res.status(201).json({
-            success: true,
-            message: "Investment created successfully",
-            data: investment
-        });
-    } catch (error) {
-        console.error("Investment Create Error:", error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
+//         res.status(201).json({
+//             success: true,
+//             message: "Investment created successfully",
+//             data: investment
+//         });
+//     } catch (error) {
+//         console.error("Investment Create Error:", error);
+//         res.status(500).json({ success: false, message: error.message });
+//     }
+// };
 
 // ✅ GET USER INVESTMENTS
 exports.getMyInvestments = async (req, res) => {
