@@ -4,7 +4,8 @@ const router = express.Router();
 const {
     createInvestment,
     getMyInvestments,
-    getInvestmentSummary
+    getInvestmentSummary,
+    createDeposit
 } = require("../controllers/investment.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
@@ -18,5 +19,6 @@ const authMiddleware = require("../middleware/auth.middleware");
 router.post("/create", authMiddleware, createInvestment);
 router.get("/my", authMiddleware, getMyInvestments);
 router.get("/summary", authMiddleware, getInvestmentSummary);
+router.post("/deposit", authMiddleware, createDeposit);
 
 module.exports = router;

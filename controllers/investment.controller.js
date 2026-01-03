@@ -24,6 +24,89 @@ const getPlanDetails = (amount) => {
     }
 };
 
+// ✅ CREATE DEPOSIT WITH REFERRAL COMMISSIONS
+exports.createDeposit = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { amount } = req.body;
+
+        if (!amount || amount < 300) {
+            return res.status(400).json({
+                success: false,
+                message: "Minimum deposit ₹300"
+            });
+        }
+
+        const plan = getPlan(amount);
+        if (!plan) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid investment plan"
+            });
+        }
+
+        const user = await User.findById(userId).populate("sponsor");
+
+        // CREATE INVESTMENT
+        const investment = await Investment.create({
+            user: userId,
+            amount,
+            dailyPercent: plan.dailyPercent,
+            totalDays: plan.days
+        });
+
+        user.totalInvestment += amount;
+        await user.save();
+
+        // TRANSACTION LOG
+        await Transaction.create({
+            user: userId,
+            type: "investment",
+            amount,
+            note: "Investment created"
+        });
+
+        // 🔥 REFERRAL COMMISSION
+        const referralPercents = [7, 5, 2, 1];
+        let currentSponsor = user.sponsor;
+
+        for (let level = 0; level < referralPercents.length; level++) {
+            if (!currentSponsor) break;
+
+            const commission = (amount * referralPercents[level]) / 100;
+            currentSponsor.wallet += commission;
+            currentSponsor.totalEarning += commission;
+            await currentSponsor.save();
+
+            await Transaction.create({
+                user: currentSponsor._id,
+                type: "referral",
+                amount: commission,
+                note: `Level ${level + 1} referral income`
+            });
+
+            currentSponsor = await User.findById(currentSponsor.sponsor);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: "Deposit successful",
+            investment,
+            referral: {
+                yourReferralCode: user.referralCode,
+                referralLink: `${process.env.FRONTEND_URL}/signup?ref=${user.referralCode}`
+            }
+        });
+
+    } catch (error) {
+        console.error("Deposit Error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 // ✅ CREATE INVESTMENT
 exports.createInvestment = async (req, res) => {
     try {
@@ -105,3 +188,5 @@ exports.getInvestmentSummary = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
