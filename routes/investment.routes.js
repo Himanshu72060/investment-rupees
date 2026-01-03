@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    // createInvestment,
+    createInvestment,
     getMyInvestments,
     getInvestmentSummary,
     createDeposit
@@ -16,7 +16,7 @@ const authMiddleware = require("../middleware/auth.middleware");
   GET   /api/investment/summary
 */
 
-// router.post("/create", authMiddleware, createInvestment);
+router.post("/create", authMiddleware, createInvestment);
 router.get("/my", authMiddleware, getMyInvestments);
 router.get("/summary", authMiddleware, getInvestmentSummary);
 router.post("/deposit", authMiddleware, createDeposit);

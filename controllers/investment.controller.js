@@ -2,16 +2,12 @@ const Investment = require("../models/Investment");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 
-
-
-
 /*
  PLAN LOGIC
  300 – 10000   → 2% daily → 100 days
  10000–30000  → 3% daily → 66 days
  30000+       → 4% daily → 50 days
 */
-
 function getPlanDetails(amount) {
     if (amount >= 300 && amount <= 10000) {
         return { dailyPercent: 2, days: 100 };
@@ -24,8 +20,6 @@ function getPlanDetails(amount) {
     }
     return null;
 }
-
-
 
 // ✅ CREATE DEPOSIT WITH REFERRAL COMMISSIONS
 exports.createDeposit = async (req, res) => {
@@ -40,7 +34,8 @@ exports.createDeposit = async (req, res) => {
             });
         }
 
-        const getPlanDetails = getPlanDetails(amount);
+        // ✅ FIXED
+        const plan = getPlanDetails(amount);
         if (!plan) {
             return res.status(400).json({
                 success: false,
@@ -49,6 +44,12 @@ exports.createDeposit = async (req, res) => {
         }
 
         const user = await User.findById(userId).populate("sponsor");
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
         // CREATE INVESTMENT
         const investment = await Investment.create({
@@ -58,7 +59,7 @@ exports.createDeposit = async (req, res) => {
             totalDays: plan.days
         });
 
-        user.totalInvestment += amount;
+        user.totalInvestment = (user.totalInvestment || 0) + amount;
         await user.save();
 
         // TRANSACTION LOG
@@ -77,8 +78,8 @@ exports.createDeposit = async (req, res) => {
             if (!currentSponsor) break;
 
             const commission = (amount * referralPercents[level]) / 100;
-            currentSponsor.wallet += commission;
-            currentSponsor.totalEarning += commission;
+            currentSponsor.wallet = (currentSponsor.wallet || 0) + commission;
+            currentSponsor.totalEarning = (currentSponsor.totalEarning || 0) + commission;
             await currentSponsor.save();
 
             await Transaction.create({
@@ -109,50 +110,6 @@ exports.createDeposit = async (req, res) => {
         });
     }
 };
-
-// ✅ CREATE INVESTMENT
-// exports.createInvestment = async (req, res) => {
-//     try {
-//         const { amount } = req.body;
-//         const userId = req.user.id;
-
-//         if (amount < 300) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Minimum investment is ₹300"
-//             });
-//         }
-
-//         const plan = getPlanDetails(amount);
-//         if (!plan) {
-//             return res.status(400).json({ success: false, message: "Invalid plan" });
-//         }
-
-//         const investment = await Investment.create({
-//             user: userId,
-//             amount,
-//             dailyPercent: plan.percent,
-//             totalDays: plan.days,
-//             startDate: new Date()
-//         });
-
-//         await Transaction.create({
-//             user: userId,
-//             type: "investment",
-//             amount,
-//             note: "Investment created"
-//         });
-
-//         res.status(201).json({
-//             success: true,
-//             message: "Investment created successfully",
-//             data: investment
-//         });
-//     } catch (error) {
-//         console.error("Investment Create Error:", error);
-//         res.status(500).json({ success: false, message: error.message });
-//     }
-// };
 
 // ✅ GET USER INVESTMENTS
 exports.getMyInvestments = async (req, res) => {
@@ -191,5 +148,3 @@ exports.getInvestmentSummary = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
-
