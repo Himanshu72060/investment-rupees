@@ -14,15 +14,17 @@ const Transaction = require("../models/Transaction");
 
 const getPlanDetails = (amount) => {
     if (amount >= 300 && amount <= 10000) {
-        return { percent: 2, days: 100 };
-    } else if (amount > 10000 && amount <= 30000) {
-        return { percent: 3, days: 66 };
-    } else if (amount > 30000) {
-        return { percent: 4, days: 50 };
-    } else {
-        return null;
+        return { dailyPercent: 2, days: 100 };
     }
+    if (amount > 10000 && amount <= 30000) {
+        return { dailyPercent: 3, days: 66 };
+    }
+    if (amount > 30000) {
+        return { dailyPercent: 4, days: 50 };
+    }
+    return null;
 };
+
 
 // ✅ CREATE DEPOSIT WITH REFERRAL COMMISSIONS
 exports.createDeposit = async (req, res) => {
