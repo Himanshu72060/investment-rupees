@@ -12,7 +12,7 @@ const Transaction = require("../models/Transaction");
  30000+       → 4% daily → 50 days
 */
 
-const getPlanDetails = (amount) => {
+function getPlanDetails(amount) {
     if (amount >= 300 && amount <= 10000) {
         return { dailyPercent: 2, days: 100 };
     }
@@ -23,7 +23,8 @@ const getPlanDetails = (amount) => {
         return { dailyPercent: 4, days: 50 };
     }
     return null;
-};
+}
+
 
 
 // ✅ CREATE DEPOSIT WITH REFERRAL COMMISSIONS
