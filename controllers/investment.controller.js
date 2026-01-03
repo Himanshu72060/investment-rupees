@@ -39,7 +39,7 @@ exports.createDeposit = async (req, res) => {
             });
         }
 
-        const plan = getPlan(amount);
+        const getPlanDetails = getPlanDetails(amount);
         if (!plan) {
             return res.status(400).json({
                 success: false,
