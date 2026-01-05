@@ -14,7 +14,7 @@ const Transaction = require("../models/Transaction");
 // ==========================
 exports.createDeposit = async (req, res) => {
     try {
-        const { amount, paymentMode, referenceId } = req.body;
+        const { amount, utr, referenceId } = req.body;
 
         if (!amount || amount < 300) {
             return res.status(400).json({

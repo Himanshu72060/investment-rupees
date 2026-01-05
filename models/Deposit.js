@@ -7,7 +7,7 @@ const depositSchema = new mongoose.Schema({
         required: true
     },
     amount: Number,
-    paymentMode: String,
+    utr: String,
     referenceId: String,
     status: {
         type: String,
