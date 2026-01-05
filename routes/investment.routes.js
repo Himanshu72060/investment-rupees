@@ -2,20 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  createDeposit,
+  createInvestment,
   getMyInvestments,
   getInvestmentSummary
 } = require("../controllers/investment.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
 
-/*
-  POST  /api/investment/deposit
-  GET   /api/investment/my
-  GET   /api/investment/summary
-*/
-
-router.post("/deposit", authMiddleware, createDeposit);
+router.post("/deposit", authMiddleware, createInvestment);
 router.get("/my", authMiddleware, getMyInvestments);
 router.get("/summary", authMiddleware, getInvestmentSummary);
 

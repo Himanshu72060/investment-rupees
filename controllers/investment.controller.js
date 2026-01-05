@@ -4,9 +4,6 @@ const Transaction = require("../models/Transaction");
 
 /*
  PLAN LOGIC
- 300 – 10000   → 2% daily → 100 days
- 10000–30000  → 3% daily → 66 days
- 30000+       → 4% daily → 50 days
 */
 function getPlanDetails(amount) {
     if (amount >= 300 && amount <= 10000) {
@@ -21,29 +18,12 @@ function getPlanDetails(amount) {
     return null;
 }
 
-// ✅ CREATE DEPOSIT WITH REFERRAL COMMISSIONS
-exports.createDeposit = async (req, res) => {
+// ✅ CREATE INVESTMENT (FROM WALLET)
+const createInvestment = async (req, res) => {
     try {
-        const userId = req.user.id;
         const { amount } = req.body;
+        const user = await User.findById(req.user.id);
 
-        if (!amount || amount < 300) {
-            return res.status(400).json({
-                success: false,
-                message: "Minimum deposit ₹300"
-            });
-        }
-
-        // ✅ FIXED
-        const plan = getPlanDetails(amount);
-        if (!plan) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid investment plan"
-            });
-        }
-
-        const user = await User.findById(userId).populate("sponsor");
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -51,59 +31,47 @@ exports.createDeposit = async (req, res) => {
             });
         }
 
-        // CREATE INVESTMENT
-        const investment = await Investment.create({
-            user: userId,
-            amount,
-            dailyPercent: plan.dailyPercent,
-            totalDays: plan.days
-        });
-
-        user.totalInvestment = (user.totalInvestment || 0) + amount;
-        await user.save();
-
-        // TRANSACTION LOG
-        await Transaction.create({
-            user: userId,
-            type: "investment",
-            amount,
-            note: "Investment created"
-        });
-
-        // 🔥 REFERRAL COMMISSION
-        const referralPercents = [7, 5, 2, 1];
-        let currentSponsor = user.sponsor;
-
-        for (let level = 0; level < referralPercents.length; level++) {
-            if (!currentSponsor) break;
-
-            const commission = (amount * referralPercents[level]) / 100;
-            currentSponsor.wallet = (currentSponsor.wallet || 0) + commission;
-            currentSponsor.totalEarning = (currentSponsor.totalEarning || 0) + commission;
-            await currentSponsor.save();
-
-            await Transaction.create({
-                user: currentSponsor._id,
-                type: "referral",
-                amount: commission,
-                note: `Level ${level + 1} referral income`
+        if (user.wallet < amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Insufficient wallet balance"
             });
-
-            currentSponsor = await User.findById(currentSponsor.sponsor);
         }
 
-        res.status(201).json({
+        const plan = getPlanDetails(amount);
+        if (!plan) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid plan"
+            });
+        }
+
+        // wallet minus
+        user.wallet -= amount;
+        await user.save();
+
+        const investment = await Investment.create({
+            user: user._id,
+            amount,
+            dailyPercent: plan.dailyPercent,
+            totalDays: plan.days,
+            endDate: new Date(Date.now() + plan.days * 86400000)
+        });
+
+        await Transaction.create({
+            user: user._id,
+            type: "investment",
+            amount,
+            note: "Investment started"
+        });
+
+        res.json({
             success: true,
-            message: "Deposit successful",
-            investment,
-            referral: {
-                yourReferralCode: user.referralCode,
-                referralLink: `${process.env.FRONTEND_URL}/signup?ref=${user.referralCode}`
-            }
+            message: "Investment successful",
+            investment
         });
 
     } catch (error) {
-        console.error("Deposit Error:", error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -111,8 +79,8 @@ exports.createDeposit = async (req, res) => {
     }
 };
 
-// ✅ GET USER INVESTMENTS
-exports.getMyInvestments = async (req, res) => {
+// ✅ GET MY INVESTMENTS
+const getMyInvestments = async (req, res) => {
     try {
         const investments = await Investment.find({ user: req.user.id });
 
@@ -125,8 +93,8 @@ exports.getMyInvestments = async (req, res) => {
     }
 };
 
-// ✅ DASHBOARD SUMMARY
-exports.getInvestmentSummary = async (req, res) => {
+// ✅ SUMMARY
+const getInvestmentSummary = async (req, res) => {
     try {
         const investments = await Investment.find({ user: req.user.id });
 
@@ -147,4 +115,11 @@ exports.getInvestmentSummary = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+// ✅ EXPORTS (VERY IMPORTANT — LAST LINE)
+module.exports = {
+    createInvestment,
+    getMyInvestments,
+    getInvestmentSummary
 };
