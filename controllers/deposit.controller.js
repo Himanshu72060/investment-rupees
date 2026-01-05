@@ -26,7 +26,7 @@ exports.createDeposit = async (req, res) => {
         const deposit = await Deposit.create({
             user: req.user.id,
             amount,
-            paymentMode,
+            utr,
             referenceId,
             status: "pending"
         });
