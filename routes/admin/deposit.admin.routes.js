@@ -1,16 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-const { approveDeposit } = require("../../controllers/admin/deposit.admin.controller");
-const authMiddleware = require("../../middleware/auth.middleware");
-const adminMiddleware = require("../../middleware/admin.middleware");
+const {
+    approveDeposit,
+    rejectDeposit,
+    getAllDeposits
+} = require("../controllers/deposit.controller");
 
-// ADMIN → APPROVE DEPOSIT
-router.post(
-    "/deposit/approve/:depositId",
-    authMiddleware,
-    adminMiddleware,
-    approveDeposit
-);
+const adminMiddleware = require("../middleware/admin.middleware");
+
+// ADMIN ROUTES
+router.get("/all", adminMiddleware, getAllDeposits);
+router.put("/approve/:id", adminMiddleware, approveDeposit);
+router.put("/reject/:id", adminMiddleware, rejectDeposit);
 
 module.exports = router;
