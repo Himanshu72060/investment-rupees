@@ -10,6 +10,7 @@ const adminDepositRoutes = require("./routes/admin/deposit.admin.routes");
 const depositRoutes = require("./routes/deposit.routes");
 
 
+
 const app = express();
 
 app.use(cors());
@@ -23,6 +24,12 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/transaction", require("./routes/transaction.routes"));
 app.use("/api/admin", adminDepositRoutes);
 app.use("/api/deposit", depositRoutes);
+app.use(
+    "/api/admin/deposit",
+    require("./routes/admin/deposit.admin.routes")
+);
+
+
 
 
 
