@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { sendLoginAlert } = require("../utils/mailer");
 
 /* =========================
    USER SIGNUP
@@ -99,6 +100,10 @@ exports.login = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
+        // Send login alert email
+        sendLoginAlert(user.email, user.name).catch(err => {
+            console.error("Login Alert Email Error:", err);
+        });
 
         res.json({
             success: true,
@@ -112,6 +117,7 @@ exports.login = async (req, res) => {
                 wallet: user.wallet
             }
         });
+
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({

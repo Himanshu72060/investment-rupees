@@ -107,3 +107,123 @@ exports.rejectDeposit = async (req, res) => {
         });
     }
 };
+
+// ==========================
+// ✅ ADMIN → UPDATE DEPOSIT STATUS (PENDING → APPROVED)
+// ==========================
+exports.updateDepositStatus = async (req, res) => {
+    try {
+        const { depositId } = req.params;
+        const { status, notes } = req.body; // status: "approved" or "rejected"
+
+        if (!depositId) {
+            return res.status(400).json({
+                success: false,
+                message: "Deposit ID is required"
+            });
+        }
+
+        // Validate status
+        const validStatuses = ["approved", "rejected"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status. Must be 'approved' or 'rejected'"
+            });
+        }
+
+        const deposit = await Deposit.findById(depositId).populate("user", "name email phone wallet");
+
+        if (!deposit) {
+            return res.status(404).json({
+                success: false,
+                message: "Deposit not found"
+            });
+        }
+
+        if (deposit.status !== "pending") {
+            return res.status(400).json({
+                success: false,
+                message: `Deposit is already ${deposit.status}. Cannot update.`
+            });
+        }
+
+        // Check if user exists
+        if (!deposit.user) {
+            return res.status(404).json({
+                success: false,
+                message: "User reference not found in deposit"
+            });
+        }
+
+        // Update deposit status
+        deposit.status = status;
+        await deposit.save();
+
+        let message = "";
+        let userId = deposit.user._id || deposit.user;
+        let userName = deposit.user.name || "Unknown";
+        let userEmail = deposit.user.email || "N/A";
+
+        let responseData = {
+            success: true,
+            deposit: {
+                _id: deposit._id,
+                user: deposit.user,
+                amount: deposit.amount,
+                status: deposit.status,
+                updatedAt: deposit.updatedAt
+            }
+        };
+
+        // If approved, add funds to user's wallet
+        if (status === "approved") {
+            const user = await User.findById(userId);
+
+            if (user) {
+                user.wallet = (user.wallet || 0) + deposit.amount;
+                await user.save();
+
+                // Create transaction record
+                await Transaction.create({
+                    user: user._id,
+                    type: "deposit",
+                    amount: deposit.amount,
+                    note: notes || "Deposit approved by admin"
+                });
+
+                message = "Deposit approved & wallet updated";
+            } else {
+                message = "Deposit status updated but user not found for wallet credit";
+            }
+        } else {
+            message = "Deposit rejected";
+        }
+
+        // Create admin notification
+        const adminNotification = {
+            type: "deposit_status_update",
+            depositId: deposit._id,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            amount: deposit.amount,
+            status: status,
+            timestamp: new Date(),
+            read: false,
+            notes: notes || ""
+        };
+
+        responseData.notification = adminNotification;
+        responseData.message = message;
+
+        res.json(responseData);
+
+    } catch (error) {
+        console.error("Update Deposit Status Error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

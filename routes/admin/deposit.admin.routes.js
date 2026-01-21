@@ -7,15 +7,31 @@ const {
     rejectDeposit
 } = require("../../controllers/admin/deposit.admin.controller");
 
+const authMiddleware = require("../../middleware/auth.middleware");
 const adminMiddleware = require("../../middleware/admin.middleware");
 
-// ✅ GET ALL DEPOSITS
-router.get("/all", adminMiddleware, getAllDeposits);
+// GET ALL DEPOSITS
+router.get(
+    "/deposits",
+    authMiddleware,
+    adminMiddleware,
+    getAllDeposits
+);
 
-// ✅ APPROVE DEPOSIT
-router.put("/approve/:depositId", adminMiddleware, approveDeposit);
+// APPROVE DEPOSIT
+router.post(
+    "/deposit/approve/:depositId",
+    authMiddleware,
+    adminMiddleware,
+    approveDeposit
+);
 
-// ❌ REJECT DEPOSIT
-router.put("/reject/:depositId", adminMiddleware, rejectDeposit);
+// REJECT DEPOSIT
+router.post(
+    "/deposit/reject/:depositId",
+    authMiddleware,
+    adminMiddleware,
+    rejectDeposit
+);
 
 module.exports = router;
