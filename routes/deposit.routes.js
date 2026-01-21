@@ -7,7 +7,8 @@ const {
     getMyDeposits,
     getAllDeposits,
     approveDeposit,
-    rejectDeposit
+    rejectDeposit,
+    getAllUserDeposits
 } = require("../controllers/deposit.controller");
 
 // MIDDLEWARE
@@ -31,5 +32,6 @@ router.get("/my", authMiddleware, getMyDeposits);
 router.get("/all", adminMiddleware, getAllDeposits);
 router.put("/approve/:id", adminMiddleware, approveDeposit);
 router.put("/reject/:id", adminMiddleware, rejectDeposit);
+router.get("/user/:userId", adminMiddleware, getAllUserDeposits);
 
 module.exports = router;

@@ -172,3 +172,22 @@ exports.rejectDeposit = async (req, res) => {
         });
     }
 };
+
+// ==========================
+// ✅ all user deposits (admin)
+// ==========================
+exports.getAllUserDeposits = async (req, res) => {
+    try {
+        const deposits = await Deposit.find({ user: req.params.userId })
+            .sort({ createdAt: -1 });
+        res.json({
+            success: true,
+            deposits
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
