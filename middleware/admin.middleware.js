@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
                 success: false,
-                message: "No token provided"
+                message: "No admin token provided"
             });
         }
 
@@ -18,22 +18,18 @@ module.exports = (req, res, next) => {
         if (decoded.role !== "admin") {
             return res.status(403).json({
                 success: false,
-                message: "Admin access only"
+                message: "Admin access denied"
             });
         }
 
-        // ✅ Attach admin
-        req.admin = {
-            id: decoded.id,
-            role: decoded.role
-        };
-
+        req.admin = decoded;
         next();
+
     } catch (error) {
         console.error("Admin Middleware Error:", error.message);
         return res.status(401).json({
             success: false,
-            message: "Invalid or expired token"
+            message: "Invalid or expired admin token"
         });
     }
 };
