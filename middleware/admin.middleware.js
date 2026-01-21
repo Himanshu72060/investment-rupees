@@ -1,24 +1,32 @@
+const jwt = require("jsonwebtoken");
+
 module.exports = (req, res, next) => {
     try {
-        if (!req.user) {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: "Unauthorized"
             });
         }
 
-        if (req.user.role !== "admin") {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.role !== "admin") {
             return res.status(403).json({
                 success: false,
-                message: "Admin access denied"
+                message: "Admin access only"
             });
         }
 
+        req.admin = decoded;
         next();
+
     } catch (error) {
-        return res.status(500).json({
+        return res.status(401).json({
             success: false,
-            message: "Admin middleware error"
+            message: "Token expired"
         });
     }
 };
