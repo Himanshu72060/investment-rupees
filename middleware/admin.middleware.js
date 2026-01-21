@@ -2,14 +2,16 @@ const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(" ")[1];
+        const authHeader = req.headers.authorization;
 
-        if (!token) {
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
                 success: false,
-                message: "Unauthorized"
+                message: "No token provided"
             });
         }
+
+        const token = authHeader.split(" ")[1];
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -20,13 +22,18 @@ module.exports = (req, res, next) => {
             });
         }
 
-        req.admin = decoded;
-        next();
+        // ✅ Attach admin
+        req.admin = {
+            id: decoded.id,
+            role: decoded.role
+        };
 
+        next();
     } catch (error) {
+        console.error("Admin Middleware Error:", error.message);
         return res.status(401).json({
             success: false,
-            message: "Token expired"
+            message: "Invalid or expired token"
         });
     }
 };

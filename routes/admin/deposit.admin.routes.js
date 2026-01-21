@@ -2,36 +2,16 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    getAllDeposits,
     approveDeposit,
-    rejectDeposit
+    getAllDeposits
 } = require("../../controllers/admin/deposit.admin.controller");
 
-const authMiddleware = require("../../middleware/auth.middleware");
 const adminMiddleware = require("../../middleware/admin.middleware");
 
-// GET ALL DEPOSITS
-router.get(
-    "/deposits",
-    authMiddleware,
-    adminMiddleware,
-    getAllDeposits
-);
+// 🔥 ADMIN → GET ALL DEPOSITS
+router.get("/deposit/deposits", adminMiddleware, getAllDeposits);
 
-// APPROVE DEPOSIT
-router.post(
-    "/deposit/approve/:depositId",
-    authMiddleware,
-    adminMiddleware,
-    approveDeposit
-);
-
-// REJECT DEPOSIT
-router.post(
-    "/deposit/reject/:depositId",
-    authMiddleware,
-    adminMiddleware,
-    rejectDeposit
-);
+// 🔥 ADMIN → APPROVE DEPOSIT
+router.put("/deposit/approve/:id", adminMiddleware, approveDeposit);
 
 module.exports = router;
