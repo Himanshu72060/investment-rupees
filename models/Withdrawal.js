@@ -13,9 +13,49 @@ const withdrawalSchema = new mongoose.Schema(
             required: true
         },
 
+        paymentMethod: {
+            type: String,
+            enum: ["upi", "bank"],
+            required: true
+        },
+
+        // 🔹 UPI DETAILS
+        upiId: {
+            type: String,
+            required: function () {
+                return this.paymentMethod === "upi";
+            }
+        },
+
+        // 🔹 BANK DETAILS
+        accountHolderName: {
+            type: String,
+            required: function () {
+                return this.paymentMethod === "bank";
+            }
+        },
+        accountNumber: {
+            type: String,
+            required: function () {
+                return this.paymentMethod === "bank";
+            }
+        },
+        ifscCode: {
+            type: String,
+            required: function () {
+                return this.paymentMethod === "bank";
+            }
+        },
+        bankName: {
+            type: String,
+            required: function () {
+                return this.paymentMethod === "bank";
+            }
+        },
+
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected", "withdraw"],
+            enum: ["pending", "approved", "rejected", "paid"],
             default: "pending"
         }
     },
